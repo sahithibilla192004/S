@@ -1,0 +1,238 @@
+Practical 1 — index.js
+{npm install/node index.js}
+--------
+
+javascriptconst express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+io.on("connection", (socket) => {
+    console.log("A user connected");
+
+    socket.on("chat message", (msg) => {
+        console.log("Received message: " + msg);
+        io.emit("chat message", msg);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("A user disconnected");
+    });
+});
+
+server.listen(9000, () => {
+    console.log("Server started on port 9000");
+});
+---------
+📁 Practical 1 — public/index.html
+---------
+html<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatting</title>
+</head>
+<body>
+
+<h1>Chatting</h1>
+
+<input id="message" placeholder="Enter message">
+<button onclick="sendMessage()">Send</button>
+
+<ul id="messages"></ul>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    function sendMessage() {
+        const input = document.getElementById("message");
+        const msg = input.value;
+
+        socket.emit("chat message", msg);
+        input.value = "";
+    }
+
+    socket.on("chat message", (msg) => {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        document.getElementById("messages").appendChild(li);
+    });
+</script>
+
+</body>
+</html>
+=====================================================================================
+📁 Practical 2 — models/alien.js
+{
+sudo apt install mongodb
+
+# Start MongoDB service
+sudo systemctl start mongodb
+sudo systemctl status mongodb
+/npm install/node app.js
+----------
+javascriptconst mongoose = require('mongoose');
+
+const alienSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    tech: {
+        type: String,
+        required: true
+    },
+    sub: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
+});
+
+module.exports = mongoose.model('Alien', alienSchema);
+---------
+📁 Practical 2 — routes/aliens.js
+----------
+javascriptconst express = require('express');
+const router = express.Router();
+const Alien = require('../models/alien');
+
+// GET all aliens
+router.get('/', async (req, res) => {
+    try {
+        const aliens = await Alien.find();
+        res.json(aliens);
+    } catch (err) {
+        res.send("Error in fetching data..", err);
+    }
+});
+
+// POST - create new alien
+router.post('/', async (req, res) => {
+    const alien = new Alien({
+        name: req.body.name,
+        tech: req.body.tech,
+        sub: req.body.sub
+    });
+    try {
+        const a1 = await alien.save();
+        res.json(a1);
+    } catch (err) {
+        res.send("Error in saving data.." + err);
+    }
+});
+
+module.exports = router;
+===============================================================================
+pract 3
+📁 server.js
+npm install
+
+# Step 3 - Start MongoDB
+sudo systemctl start mongodb
+
+# Step 4 - Run the server
+node server.js
+-----------------
+javascriptconst express = require("express");
+const mongoose = require("mongoose");
+const multer = require("multer");
+const path = require("path");
+
+const app = express();
+
+// MongoDB connect
+mongoose.connect("mongodb://127.0.0.1:27017/fileDB")
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+// Schema
+const FileSchema = new mongoose.Schema({
+  filename: String,
+  contentType: String,
+  data: Buffer
+});
+
+const File = mongoose.model("File", FileSchema);
+
+// Multer (store in memory)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Serve HTML
+app.use(express.static(__dirname));
+
+// Upload route
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const newFile = new File({
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+      data: req.file.buffer
+    });
+
+    await newFile.save();
+    res.send("File uploaded successfully!");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// Get file by ID
+app.get("/file/:id", async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file) return res.send("File not found");
+
+    res.contentType(file.contentType);
+    res.send(file.data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// Start server
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});
+---------------
+📁 index.html
+--------------
+html<!DOCTYPE html>
+<html>
+<head>
+  <title>File Upload</title>
+</head>
+<body>
+  <h2>Upload File</h2>
+
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" required />
+    <button type="submit">Upload</button>
+  </form>
+
+</body>
+</html>
+----------------
+📁 package.json
+-------------
+json{
+  "name": "mongodbupload",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.3.1",
+    "multer": "^2.1.1"
+  }
+}
+===============================================================================
