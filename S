@@ -236,3 +236,310 @@ json{
   }
 }
 ===============================================================================
+✅ Practical 3 — Create & Publish Node Module
+index.js
+-------
+javascript// A simple function that greets
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+// Export the function
+------
+module.exports = greet;
+test.js
+javascriptconst greet = require('./index');
+console.log(greet('Siddhi')); // Hello, Siddhi!
+Commands
+bash# Test locally
+node test.js
+----
+# Publish to npm
+----
+npm login
+npm config set //registry.npmjs.org/:_authToken=YOUR_TOKEN
+npm publish --access public
+
+# Install your module
+npm install your-module-name
+==================================================================
+✅ Practical 4b — React TODO App
+-----
+public/data.json
+------
+json[
+  { "id": 1, "text": "Learn React", "done": false },
+  { "id": 2, "text": "Build TODO App", "done": true }
+]
+------
+App.jsx
+----
+jsximport { useState, useEffect } from "react"
+import { TodoForm } from "./TodoForm"
+import { TodoList } from "./TodoList"
+
+export const App = () => {
+  const [todo, setTodos] = useState([])
+
+  const addTodo = (data) => {
+    const newTodo = { id: Date.now(), text: data, done: false }
+    setTodos([...todo, newTodo])
+  }
+
+  const toggleTodo = (id) => {
+    const updated = todo.map(t =>
+      t.id === id ? { ...t, done: !t.done } : t
+    );
+    setTodos(updated);
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todo.filter(t => t.id !== id));
+  };
+
+  useEffect(() => {
+    const getTodos = async () => {
+      const res = await fetch('/data.json')
+      const data = await res.json()
+      setTodos(data)
+    }
+    getTodos()
+  }, [])
+
+  return (
+    <>
+      <h1>TODO APP</h1>
+      <TodoForm addTodo={addTodo} />
+      <TodoList todo={todo} toggleTodo={toggleTodo} deleteTodo={deleteTodo} />
+    </>
+  )
+}
+-------
+TodoForm.jsx
+------
+jsximport { useState } from "react"
+
+export const TodoForm = ({ addTodo }) => {
+    const [input, setInput] = useState("");
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        addTodo(input)
+    }
+    return (
+        <>
+            <h2>Add Todo</h2>
+            <form onSubmit={handleSubmit}>
+                <input
+                    value={input}
+                    placeholder="Enter Todo"
+                    onChange={(e) => setInput(e.target.value)}
+                />
+                <button>Add New Todo</button>
+            </form>
+        </>
+    )
+}
+---------
+TodoItem.jsx
+---------
+jsxexport const TodoItem = ({ todo, toggleTodo, deleteTodo }) => {
+    return (
+        <li>
+            <span
+                onClick={() => toggleTodo(todo.id)}
+                style={{
+                    textDecoration: todo.done ? "line-through" : "none",
+                    cursor: "pointer",
+                    marginRight: "10px"
+                }}
+            >
+                {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+        </li>
+    )
+}
+------
+TodoList.jsx
+----------
+jsximport { TodoItem } from "./TodoItem"
+
+export const TodoList = ({ todo, toggleTodo, deleteTodo }) => {
+    return (
+        <>
+            <h2>All Todos</h2>
+            <ul>
+                {todo.map(t => (
+                    <TodoItem
+                        key={t.id}
+                        todo={t}
+                        toggleTodo={toggleTodo}
+                        deleteTodo={deleteTodo}
+                    />
+                ))}
+            </ul>
+        </>
+    )
+}
+-----
+Commands
+bashnpm create vite@latest
+npm install
+npm run dev
+============================================================
+✅ Practical 4b — React TODO App
+public/data.json
+-----------------
+json[
+  { "id": 1, "text": "Learn React", "done": false },
+  { "id": 2, "text": "Build TODO App", "done": true }
+]
+--------------
+App.jsx
+-----------
+jsximport { useState, useEffect } from "react"
+import { TodoForm } from "./TodoForm"
+import { TodoList } from "./TodoList"
+
+export const App = () => {
+  const [todo, setTodos] = useState([])
+
+  const addTodo = (data) => {
+    const newTodo = { id: Date.now(), text: data, done: false }
+    setTodos([...todo, newTodo])
+  }
+
+  const toggleTodo = (id) => {
+    const updated = todo.map(t =>
+      t.id === id ? { ...t, done: !t.done } : t
+    );
+    setTodos(updated);
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todo.filter(t => t.id !== id));
+  };
+
+  useEffect(() => {
+    const getTodos = async () => {
+      const res = await fetch('/data.json')
+      const data = await res.json()
+      setTodos(data)
+    }
+    getTodos()
+  }, [])
+
+  return (
+    <>
+      <h1>TODO APP</h1>
+      <TodoForm addTodo={addTodo} />
+      <TodoList todo={todo} toggleTodo={toggleTodo} deleteTodo={deleteTodo} />
+    </>
+  )
+}
+------------------
+TodoForm.jsx
+------------
+jsximport { useState } from "react"
+
+export const TodoForm = ({ addTodo }) => {
+    const [input, setInput] = useState("");
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        addTodo(input)
+    }
+    return (
+        <>
+            <h2>Add Todo</h2>
+            <form onSubmit={handleSubmit}>
+                <input
+                    value={input}
+                    placeholder="Enter Todo"
+                    onChange={(e) => setInput(e.target.value)}
+                />
+                <button>Add New Todo</button>
+            </form>
+        </>
+    )
+}
+-------------------
+TodoItem.jsx
+----------------
+jsxexport const TodoItem = ({ todo, toggleTodo, deleteTodo }) => {
+    return (
+        <li>
+            <span
+                onClick={() => toggleTodo(todo.id)}
+                style={{
+                    textDecoration: todo.done ? "line-through" : "none",
+                    cursor: "pointer",
+                    marginRight: "10px"
+                }}
+            >
+                {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+        </li>
+    )
+}
+------------------
+TodoList.jsx
+--------------------
+jsximport { TodoItem } from "./TodoItem"
+
+export const TodoList = ({ todo, toggleTodo, deleteTodo }) => {
+    return (
+        <>
+            <h2>All Todos</h2>
+            <ul>
+                {todo.map(t => (
+                    <TodoItem
+                        key={t.id}
+                        todo={t}
+                        toggleTodo={toggleTodo}
+                        deleteTodo={deleteTodo}
+                    />
+                ))}
+            </ul>
+        </>
+    )
+}
+----------
+Commands
+bashnpm create vite@latest
+npm install
+npm run dev
+=============================================================================
+✅ Practical 5 — Fetch API Data in React
+App.jsx
+------------
+jsximport { useEffect, useState } from "react"
+
+export const App = () => {
+  const [country, setCountry] = useState([])
+
+  useEffect(() => {
+    const getAll = async () => {
+      const res = await fetch("https://restcountries.com/v3.1/all?fields=name,flags")
+      const data = await res.json()
+      setCountry(data)
+    }
+    getAll()
+  }, [])
+
+  return (
+    <>
+      <h1>All Countries</h1>
+      <div>
+        {country.map((c, i) =>
+          <div key={i}>
+            <img src={c.flags.png} width={100} />
+            <p>{c.name.common}</p>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
